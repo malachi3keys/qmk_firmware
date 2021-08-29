@@ -98,7 +98,11 @@ void process_combo_event(uint16_t combo_index, bool pressed) {
 }
 ```
 
+<<<<<<< HEAD
 This will send "john.doe@example.com" if you chord E and M together, and clear the current line with Backspace and Left-Shift. You could change this to do stuff like play sounds or change settings.
+=======
+This will send "the" if you hit Backspace and T, and clear the current line with Backspace and Left-Shift. But you could change this to do stuff like play sounds or change settings.
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
 
 It is worth noting that `COMBO_ACTION`s are not needed anymore. As of [PR#8591](https://github.com/qmk/qmk_firmware/pull/8591/), it is possible to run your own custom keycodes from combos. Just define the custom keycode, program its functionality in `process_record_user`, and define a combo with `COMBO(<key_array>, <your_custom_keycode>)`.
 
@@ -134,7 +138,10 @@ Defining `EXTRA_SHORT_COMBOS` combines a combo's internal state into just one by
 Processing combos has two buffers, one for the key presses, another for the combos being activated. Use the following options to configure the sizes of these buffers:
 
 | Define                              | Default                                              |
+<<<<<<< HEAD
 |-------------------------------------|------------------------------------------------------|
+=======
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
 | `#define COMBO_KEY_BUFFER_LENGTH 8` | 8 (the key amount `(EXTRA_)EXTRA_LONG_COMBOS` gives) |
 | `#define COMBO_BUFFER_LENGTH 4`     | 4                                                    |
 

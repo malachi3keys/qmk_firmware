@@ -177,6 +177,13 @@ uint16_t get_event_keycode(keyevent_t event, bool update_layer_cache) {
 
 /* Get keycode, and then process pre tapping functionality */
 bool pre_process_record_quantum(keyrecord_t *record) {
+<<<<<<< HEAD
+=======
+    if(IS_NOEVENT(record->event)) {
+        return true;
+    }
+
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
     if (!(
 #ifdef COMBO_ENABLE
         process_combo(get_record_keycode(record, true), record) &&

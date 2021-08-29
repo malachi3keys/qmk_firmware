@@ -36,6 +36,7 @@ __attribute__((weak)) bool get_combo_must_hold(uint16_t index, combo_t *combo) {
 #ifdef COMBO_MUST_TAP_PER_COMBO
 __attribute__((weak)) bool get_combo_must_tap(uint16_t index, combo_t *combo) { return false; }
 #endif
+<<<<<<< HEAD
 
 #ifdef COMBO_TERM_PER_COMBO
 __attribute__((weak)) uint16_t get_combo_term(uint16_t index, combo_t *combo) { return COMBO_TERM; }
@@ -45,6 +46,19 @@ __attribute__((weak)) uint16_t get_combo_term(uint16_t index, combo_t *combo) { 
 __attribute__((weak)) bool process_combo_key_release(uint16_t combo_index, combo_t *combo, uint8_t key_index, uint16_t keycode) { return false; }
 #endif
 
+=======
+
+#ifdef COMBO_TERM_PER_COMBO
+__attribute__((weak)) uint16_t get_combo_term(uint16_t index, combo_t *combo) { return COMBO_TERM; }
+#endif
+
+#ifdef COMBO_PROCESS_KEY_RELEASE
+__attribute__((weak)) bool process_combo_key_release(uint16_t combo_index, combo_t *combo, uint8_t key_index, uint16_t keycode) { return false; }
+#endif
+
+__attribute__((weak)) bool combo_should_trigger(uint16_t combo_index, combo_t *combo) { return true; }
+
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
 #ifndef COMBO_NO_TIMER
 static uint16_t timer                 = 0;
 #endif
@@ -113,6 +127,8 @@ static inline void release_combo(uint16_t combo_index, combo_t *combo) {
 #endif
     } else {
         process_combo_event(combo_index, false);
+<<<<<<< HEAD
+=======
     }
     DEACTIVATE_COMBO(combo);
 }
@@ -160,6 +176,55 @@ void clear_combos(void) {
         if (!COMBO_ACTIVE(combo)) {
             RESET_COMBO_STATE(combo);
         }
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
+    }
+    DEACTIVATE_COMBO(combo);
+}
+
+static inline bool _get_combo_must_hold(uint16_t combo_index, combo_t *combo) {
+#ifdef COMBO_NO_TIMER
+    return false;
+#elif defined(COMBO_MUST_HOLD_PER_COMBO)
+    return get_combo_must_hold(combo_index, combo);
+#elif defined(COMBO_MUST_HOLD_MODS)
+    return (KEYCODE_IS_MOD(combo->keycode) ||
+            (combo->keycode >= QK_MOMENTARY && combo->keycode <= QK_MOMENTARY_MAX));
+#endif
+    return false;
+}
+
+static inline uint16_t _get_wait_time(uint16_t combo_index, combo_t *combo ) {
+    if (_get_combo_must_hold(combo_index, combo)
+#ifdef COMBO_MUST_TAP_PER_COMBO
+            || get_combo_must_tap(combo_index, combo)
+#endif
+       ) {
+        if (longest_term < COMBO_HOLD_TERM) {
+            return COMBO_HOLD_TERM;
+        }
+    }
+
+    return longest_term;
+}
+
+static inline uint16_t _get_combo_term(uint16_t combo_index, combo_t *combo) {
+
+#if defined(COMBO_TERM_PER_COMBO)
+        return get_combo_term(combo_index, combo);
+#endif
+
+    return COMBO_TERM;
+}
+
+<<<<<<< HEAD
+void clear_combos(void) {
+    uint16_t index = 0;
+    longest_term = 0;
+    for (index = 0; index < COMBO_LEN; ++index) {
+        combo_t *combo = &key_combos[index];
+        if (!COMBO_ACTIVE(combo)) {
+            RESET_COMBO_STATE(combo);
+        }
     }
 }
 
@@ -167,12 +232,19 @@ static inline void dump_key_buffer(void) {
     /* First call start from 0 index; recursive calls need to start from i+1 index */
     static uint8_t key_buffer_next = 0;
 
+=======
+static inline void dump_key_buffer(void) {
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
     if (key_buffer_size == 0) {
         return;
     }
 
+<<<<<<< HEAD
     for (uint8_t key_buffer_i = key_buffer_next; key_buffer_i < key_buffer_size; key_buffer_i++) {
         key_buffer_next = key_buffer_i + 1;
+=======
+    for (uint8_t key_buffer_i = 0; key_buffer_i < key_buffer_size; key_buffer_i++) {
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
 
         queued_record_t *qrecord = &key_buffer[key_buffer_i];
         keyrecord_t *record = &qrecord->record;
@@ -193,7 +265,11 @@ static inline void dump_key_buffer(void) {
         record->event.time = 0;
     }
 
+<<<<<<< HEAD
     key_buffer_next = key_buffer_size = 0;
+=======
+    key_buffer_size = 0;
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
 }
 
 #define NO_COMBO_KEYS_ARE_DOWN (0 == COMBO_STATE(combo))
@@ -235,6 +311,7 @@ void drop_combo_from_buffer(uint16_t combo_index) {
             break;
         }
         INCREMENT_MOD(i);
+<<<<<<< HEAD
     }
 }
 
@@ -347,6 +424,120 @@ static bool process_single_combo(combo_t *combo, uint16_t keycode, keyrecord_t *
     bool key_is_part_of_combo = !COMBO_DISABLED(combo) && is_combo_enabled();
 
     if (record->event.pressed && key_is_part_of_combo) {
+=======
+    }
+}
+
+void apply_combo(uint16_t combo_index, combo_t *combo) {
+    /* Apply combo's result keycode to the last chord key of the combo and
+     * disable the other keys. */
+
+    if (COMBO_DISABLED(combo)) { return; }
+
+    // state to check against so we find the last key of the combo from the buffer
+#if defined(EXTRA_EXTRA_LONG_COMBOS)
+    uint32_t state = 0;
+#elif defined(EXTRA_LONG_COMBOS)
+    uint16_t state = 0;
+#else
+    uint8_t state = 0;
+#endif
+
+    for (uint8_t key_buffer_i = 0; key_buffer_i < key_buffer_size; key_buffer_i++) {
+
+        queued_record_t *qrecord = &key_buffer[key_buffer_i];
+        keyrecord_t *record = &qrecord->record;
+        uint16_t keycode = qrecord->keycode;
+
+        uint8_t key_count = 0;
+        uint16_t key_index = -1;
+        _find_key_index_and_count(combo->keys, keycode, &key_index, &key_count);
+
+        if (-1 == (int16_t)key_index) {
+            // key not part of this combo
+            continue;
+        }
+
+        KEY_STATE_DOWN(state, key_index);
+        if (ALL_COMBO_KEYS_ARE_DOWN(state, key_count)) {
+            // this in the end executes the combo when the key_buffer is dumped.
+            record->keycode = combo->keycode;
+            record->event.key = COMBO_KEY_POS;
+
+            qrecord->combo_index = combo_index;
+            ACTIVATE_COMBO(combo);
+
+            break;
+        } else {
+            // key was part of the combo but not the last one, "disable" it
+            // by making it a TICK event.
+            record->event.time = 0;
+        }
+
+    }
+    drop_combo_from_buffer(combo_index);
+}
+
+static inline void apply_combos(void) {
+    // Apply all buffered normal combos.
+    for (uint8_t i = combo_buffer_read;
+            i != combo_buffer_write;
+            INCREMENT_MOD(i)) {
+
+        queued_combo_t *buffered_combo = &combo_buffer[i];
+        combo_t *combo = &key_combos[buffered_combo->combo_index];
+
+#ifdef COMBO_MUST_TAP_PER_COMBO
+        if (get_combo_must_tap(buffered_combo->combo_index, combo)) {
+            // Tap-only combos are applied on key release only, so let's drop 'em here.
+            drop_combo_from_buffer(buffered_combo->combo_index);
+            continue;
+        }
+#endif
+        apply_combo(buffered_combo->combo_index, combo);
+    }
+    dump_key_buffer();
+    clear_combos();
+}
+
+combo_t* overlaps(combo_t *combo1, combo_t *combo2) {
+    /* Checks if the combos overlap and returns the combo that should be
+     * dropped from the combo buffer.
+     * The combo that has less keys will be dropped. If they have the same
+     * amount of keys, drop combo1. */
+
+    uint8_t idx1 = 0, idx2 = 0;
+    uint16_t key1, key2;
+    bool overlaps = false;
+
+    while ((key1 = pgm_read_word(&combo1->keys[idx1])) != COMBO_END) {
+        idx2 = 0;
+        while ((key2 = pgm_read_word(&combo2->keys[idx2])) != COMBO_END) {
+            if (key1 == key2) overlaps = true;
+            idx2 += 1;
+        }
+        idx1 += 1;
+    }
+
+    if (!overlaps) return NULL;
+    if (idx2 < idx1) return combo2;
+    return combo1;
+}
+
+static bool process_single_combo(combo_t *combo, uint16_t keycode, keyrecord_t *record, uint16_t combo_index) {
+    uint8_t key_count = 0;
+    uint16_t key_index = -1;
+    _find_key_index_and_count(combo->keys, keycode, &key_index, &key_count);
+
+    /* Continue processing if key isn't part of current combo. */
+    if (-1 == (int16_t)key_index) {
+        return false;
+    }
+
+    bool key_is_part_of_combo = !COMBO_DISABLED(combo) && combo_should_trigger(combo_index, combo);
+
+    if (record->event.pressed && !COMBO_DISABLED(combo)) {
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
         uint16_t time = _get_combo_term(combo_index, combo);
         if (!COMBO_ACTIVE(combo)) {
             KEY_STATE_DOWN(combo->state, key_index);
@@ -476,6 +667,13 @@ bool process_combo(uint16_t keycode, keyrecord_t *record) {
         return true;
     }
 
+<<<<<<< HEAD
+=======
+    if (!is_combo_enabled()) {
+        return true;
+    }
+
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
 #ifdef COMBO_ONLY_FROM_LAYER
     /* Only check keycodes from one layer. */
     keycode = keymap_key_to_keycode(COMBO_ONLY_FROM_LAYER, record->event.key);
@@ -522,7 +720,11 @@ bool process_combo(uint16_t keycode, keyrecord_t *record) {
     return !is_combo_key;
 }
 
+<<<<<<< HEAD
 void combo_task(void) {
+=======
+void matrix_scan_combo(void) {
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
     if (!b_combo_enable) {
         return;
     }
@@ -550,8 +752,11 @@ void combo_disable(void) {
 #endif
     b_combo_enable = false;
     combo_buffer_read = combo_buffer_write;
+<<<<<<< HEAD
     clear_combos();
     dump_key_buffer();
+=======
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183
 }
 
 void combo_toggle(void) {

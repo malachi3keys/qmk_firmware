@@ -108,11 +108,19 @@ void action_exec(keyevent_t event) {
 #endif
 
 #ifndef NO_ACTION_TAPPING
+<<<<<<< HEAD:quantum/action.c
     if (IS_NOEVENT(record.event) || pre_process_record_quantum(&record)) {
         action_tapping_process(record);
     }
 #else
     if (IS_NOEVENT(record.event) || pre_process_record_quantum(&record)) {
+=======
+    if (pre_process_record_quantum(&record)) {
+        action_tapping_process(record);
+    }
+#else
+    if (pre_process_record_quantum(&record)) {
+>>>>>>> a20657f7bbac3ab0a8adcc775f3e44592bbfe183:tmk_core/common/action.c
         process_record(&record);
     }
     if (!IS_NOEVENT(record.event)) {
